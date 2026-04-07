@@ -3,8 +3,8 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Fuel Subsidy Tracker</title>
-    <link href="Fuel%20Subsidy%20Ticker_files/css2.css" rel="stylesheet">
+    <title>Fuel Subsidy Tracker</title>
+    <link href="Fuel%20Subsidy%20Ticker%20old_files/css2.css" rel="stylesheet">
     <style>
       *,
       *::before,
@@ -343,17 +343,32 @@
         border-bottom-color: var(--yellow);
       }
 
-      .flash {
-        animation: flash 0.15s ease-out;
+      /* NumberFlow elements inherit font from parent */
+      .ticker-box number-flow {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(2.5rem, 7vw, 4.5rem);
+        color: var(--red);
+        line-height: 1;
+        letter-spacing: 0.02em;
+        --number-flow-mask-height: 0.15em;
       }
 
-      @keyframes flash {
-        0% {
-          opacity: 0.4;
-        }
-        100% {
-          opacity: 1;
-        }
+      .panel-number number-flow {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(1.5rem, 3.5vw, 2.6rem);
+        line-height: 1;
+        letter-spacing: 0.02em;
+        --number-flow-mask-height: 0.15em;
+      }
+
+      .panel-lane .panel-number number-flow {
+        color: #b97fff;
+      }
+      .panel-bike .panel-number number-flow {
+        color: var(--green);
+      }
+      .panel-bus .panel-number number-flow {
+        color: #5b9fff;
       }
 
       @media (max-width: 580px) {
@@ -390,29 +405,32 @@
       <div class="header">
         <div class="header-dot"></div>
         <div class="header-label">
-          Live tracker <span>AUD · Q2 2026</span>
+          Live tracker<span>AUD · Q2 2026</span>
         </div>
       </div>
 
       <div class="body">
         <div class="question">
-          The Federal Government has subsidised petrol by 26c per litre for three months, a cost of $1.5 billion with no ongoing solutions for daily transport
-        </div>
+                    The Federal Government has subsidised petrol by 26c per litre for three months, a cost of $1.5 billion with no ongoing solutions for daily transport
 
-        <div class="ticker-box">
-          <div class="panel-label">Fuel subsidy since Apr 1 2026</div>
-          <div class="panel-number flash" id="dollar-count">$108,155,904.90</div>
         </div>
-
-         <div class="body">
+ <div class="body">
         <div class="answer">
             What else $1.5 billion would buy
         </div>
+        <div class="ticker-box">
+          <div class="panel-label">Fuel subsidy since Apr 1 2026</div>
+          <div class="panel-number">
+            <number-flow id="dollar-flow" data-will-change=""></number-flow>
+          </div>
+          
 
         <div class="panels">
           <div class="panel panel-lane">
             <div class="panel-label">Km of pop-up bike paths</div>
-            <div class="panel-number" id="lane-count">600.87</div>
+            <div class="panel-number">
+              <number-flow id="lane-flow" data-will-change=""></number-flow>
+            </div>
             <div class="panel-unit">@ $180K per km</div>
           </div>
 
@@ -420,7 +438,9 @@
 
           <div class="panel panel-bike">
             <div class="panel-label">Km of permanent shared paths</div>
-            <div class="panel-number" id="km-count">135.19</div>
+            <div class="panel-number">
+              <number-flow id="km-flow" data-will-change=""></number-flow>
+            </div>
             <div class="panel-unit">@ $800K per km</div>
           </div>
 
@@ -430,8 +450,10 @@
             <div class="panel-label">
               Electric buses for regional towns
             </div>
-            <div class="panel-number" id="bus-count">108</div>
-            <div class="panel-unit">@ $1M per bus</div>
+            <div class="panel-number">
+              <number-flow id="bus-flow" data-will-change=""></number-flow>
+            </div>
+            <div class="panel-unit">electric buses @ $1M each</div>
           </div>
         </div>
 
@@ -457,10 +479,10 @@
         <div class="progress-section">
           <div class="progress-label">
             <span>3-month period progress</span>
-            <span id="pct-label">7.21%</span>
+            <span id="pct-label">7.45%</span>
           </div>
           <div class="progress-track">
-            <div class="progress-fill" id="progress-fill" style="width: 7.21%;"></div>
+            <div class="progress-fill" id="progress-fill" style="width: 7.45%;"></div>
           </div>
         </div>
       </div>
@@ -472,35 +494,63 @@
           <a href="https://www.watoday.com.au/politics/western-australia/why-are-wa-s-diesel-buses-about-to-go-extinct-20250521-p5m13h.html" target="_blank" rel="noopener">WAToday — Electric buses</a>
           ·
           <a href="https://www.abc.net.au/news/2026-04-01/call-for-better-public-transport-wa-regions/106516160" target="_blank" rel="noopener">ABC News — Public transport WA regions</a></span>
-        <span id="elapsed-label">Elapsed: 6d 11h 44m 40s</span>
+        <span id="elapsed-label">Elapsed: 6d 16h 53m 59s</span>
       </div>
     </div>
 
-    <script>
+    <script type="module">
+      import NumberFlow, { continuous } from "https://esm.sh/number-flow";
+
       const TOTAL = 1_500_000_000;
-      const RATE_PER_SEC = TOTAL / (90 * 24 * 60 * 60);
       const DURATION_MS = 90 * 24 * 60 * 60 * 1000;
       const COST_PER_KM = 800_000;
       const COST_PER_BUS = 1_000_000;
       const COST_PER_LANE_KM = 180_000;
       const START = new Date("2026-04-01T00:00:00+10:00").getTime();
 
-      const dollarEl = document.getElementById("dollar-count");
-      const kmEl = document.getElementById("km-count");
-      const busEl = document.getElementById("bus-count");
-      const laneEl = document.getElementById("lane-count");
+      await customElements.whenDefined("number-flow");
+
+      const dollarFlow = document.getElementById("dollar-flow");
+      const kmFlow = document.getElementById("km-flow");
+      const busFlow = document.getElementById("bus-flow");
+      const laneFlow = document.getElementById("lane-flow");
       const progressEl = document.getElementById("progress-fill");
       const pctEl = document.getElementById("pct-label");
       const elapsedEl = document.getElementById("elapsed-label");
 
-      function formatDollars(n) {
-        const [whole, dec] = n.toFixed(2).split(".");
-        return "$" + parseInt(whole).toLocaleString("en-AU") + "." + dec;
-      }
+      // Configure dollar flow
+      dollarFlow.format = {
+        style: "currency",
+        currency: "AUD",
+        currencyDisplay: "narrowSymbol",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      };
+      dollarFlow.locales = "en-AU";
+      dollarFlow.plugins = [continuous];
+      dollarFlow.spinTiming = { duration: 600, easing: "ease-out" };
+      dollarFlow.transformTiming = { duration: 600, easing: "ease-out" };
 
-      function formatKm(n) {
-        return n.toFixed(2);
-      }
+      // Configure km flow
+      kmFlow.format = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+      kmFlow.locales = "en-AU";
+      kmFlow.plugins = [continuous];
+      kmFlow.spinTiming = { duration: 600, easing: "ease-out" };
+      kmFlow.transformTiming = { duration: 600, easing: "ease-out" };
+
+      // Configure lane flow
+      laneFlow.format = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+      laneFlow.locales = "en-AU";
+      laneFlow.plugins = [continuous];
+      laneFlow.spinTiming = { duration: 600, easing: "ease-out" };
+      laneFlow.transformTiming = { duration: 600, easing: "ease-out" };
+
+      // Configure bus flow
+      busFlow.format = { maximumFractionDigits: 0 };
+      busFlow.locales = "en-AU";
+      busFlow.plugins = [continuous];
+      busFlow.spinTiming = { duration: 600, easing: "ease-out" };
+      busFlow.transformTiming = { duration: 600, easing: "ease-out" };
 
       function formatElapsed(ms) {
         const s = Math.floor(ms / 1000);
@@ -514,7 +564,7 @@
         return `${sec}s`;
       }
 
-      let lastDollar = 0;
+      let initialised = false;
 
       function tick() {
         const now = Date.now();
@@ -528,20 +578,33 @@
         const laneKm = spent / COST_PER_LANE_KM;
         const pct = (progress * 100).toFixed(2);
 
-        dollarEl.textContent = formatDollars(spent);
-        kmEl.textContent = formatKm(km);
-        busEl.textContent = buses.toLocaleString("en-AU");
-        laneEl.textContent = formatKm(laneKm);
+        if (!initialised) {
+          // First call: set without animation
+          dollarFlow.animated = false;
+          kmFlow.animated = false;
+          laneFlow.animated = false;
+          busFlow.animated = false;
+        }
+
+        dollarFlow.update(spent);
+        kmFlow.update(km);
+        laneFlow.update(laneKm);
+        busFlow.update(buses);
+
+        if (!initialised) {
+          // Re-enable animation after first paint
+          requestAnimationFrame(() => {
+            dollarFlow.animated = true;
+            kmFlow.animated = true;
+            laneFlow.animated = true;
+            busFlow.animated = true;
+          });
+          initialised = true;
+        }
+
         progressEl.style.width = pct + "%";
         pctEl.textContent = pct + "%";
         elapsedEl.textContent = "Elapsed: " + formatElapsed(elapsed);
-
-        if (Math.floor(spent) !== Math.floor(lastDollar)) {
-          dollarEl.classList.remove("flash");
-          void dollarEl.offsetWidth;
-          dollarEl.classList.add("flash");
-        }
-        lastDollar = spent;
       }
 
       tick();
