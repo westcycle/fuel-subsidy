@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Fuel Subsidy Tracker</title>
+    <link href="Fuel%20Subsidy%20Ticker_files/css2.css" rel="stylesheet">
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --black: #0a0a0a;
+        --yellow: #f5e642;
+        --green: #3dffa0;
+        --red: #ff3d3d;
+        --white: #f0ede6;
+        --mid: #1c1c1c;
+        --border: #2a2a2a;
+      }
+
+      body {
+        background: var(--black);
+        color: var(--white);
+        font-family: "DM Sans", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .widget {
+        width: 100%;
+        max-width: 820px;
+        border: 1px solid var(--border);
+        background: var(--mid);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .widget::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.08) 2px,
+          rgba(0, 0, 0, 0.08) 4px
+        );
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* Header */
+      .header {
+        background: var(--yellow);
+        color: var(--black);
+        padding: 0.6rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .header-dot {
+        width: 10px;
+        height: 10px;
+        background: var(--black);
+        border-radius: 50%;
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .header-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .header-label span {
+        opacity: 0.5;
+        margin-left: 0.5rem;
+      }
+
+      /* Body */
+      .body {
+        padding: 2rem 2rem 1.5rem;
+      }
+
+      .question {
+        font-size: 1rem;
+        font-weight: 600;
+        color: rgba(240, 237, 230, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 2rem;
+        line-height: 1.5;
+      }
+
+       .answer {
+        font-size: 2rem;
+        font-weight: 800;
+        color: rgba(236, 8, 240, 0.892);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 2rem;
+        line-height: 1.5;
+      }
+
+      /* Ticker box */
+      .ticker-box {
+        border: 2px solid var(--red);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+
+      .ticker-box .panel-label {
+        font-size: 0.7rem;
+      }
+
+      .ticker-box .panel-number {
+        font-size: clamp(2.5rem, 7vw, 4.5rem);
+        color: var(--red);
+      }
+
+      .ticker-box .panel-unit {
+        font-size: 0.8rem;
+      }
+
+      /* Main panels */
+      .panels {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 0;
+        align-items: stretch;
+        margin-bottom: 1.5rem;
+      }
+
+      .panel {
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+      }
+
+      .panel-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 0.8rem;
+        opacity: 0.5;
+      }
+
+      .panel-number {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(1.5rem, 3.5vw, 2.6rem);
+        line-height: 1;
+        letter-spacing: 0.02em;
+      }
+
+      .panel-unit {
+        font-family: "DM Mono", monospace;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        opacity: 0.6;
+        letter-spacing: 0.08em;
+      }
+
+      .panel-fuel {
+        border-color: var(--red);
+      }
+      .panel-fuel .panel-number {
+        color: var(--red);
+      }
+
+      .panel-bike {
+        border-color: var(--green);
+      }
+      .panel-bike .panel-number {
+        color: var(--green);
+      }
+
+      .panel-bus {
+        border-color: #5b9fff;
+      }
+      .panel-bus .panel-number {
+        color: #5b9fff;
+      }
+
+      .panel-lane {
+        border-color: #b97fff;
+      }
+      .panel-lane .panel-number {
+        color: #b97fff;
+      }
+
+      .vs-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 1rem;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 1.4rem;
+        color: var(--yellow);
+        opacity: 0.7;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+
+      .vs-divider::before,
+      .vs-divider::after {
+        content: "";
+        display: block;
+        width: 1px;
+        height: 30px;
+        background: var(--border);
+      }
+
+      /* Rate tiles */
+      .rate-tiles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        margin-bottom: 1.5rem;
+      }
+
+      .rate-tile {
+        border: 1px solid var(--border);
+        border-right: none;
+        padding: 0.9rem 1rem;
+        background: rgba(245, 230, 66, 0.03);
+      }
+
+      .rate-tile:last-child {
+        border-right: 1px solid var(--border);
+      }
+
+      .rate-tile-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        opacity: 0.4;
+        margin-bottom: 0.4rem;
+      }
+
+      .rate-tile-value {
+        font-family: "DM Mono", monospace;
+        font-size: 0.85rem;
+        color: var(--yellow);
+        font-weight: 500;
+      }
+
+      /* Progress */
+      .progress-section {
+        margin-bottom: 0.5rem;
+      }
+
+      .progress-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        opacity: 0.4;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .progress-track {
+        height: 4px;
+        background: var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--red), var(--yellow));
+        transition: width 1s linear;
+        position: relative;
+      }
+
+      .progress-fill::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3)
+        );
+      }
+
+      /* Footer */
+      .footer {
+        padding: 0.8rem 1.2rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        font-family: "DM Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(240, 237, 230, 0.25);
+        flex-wrap: wrap;
+      }
+
+      .footer a {
+        color: rgba(240, 237, 230, 0.4);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(240, 237, 230, 0.15);
+        transition: color 0.2s;
+      }
+
+      .footer a:hover {
+        color: var(--yellow);
+        border-bottom-color: var(--yellow);
+      }
+
+      .flash {
+        animation: flash 0.15s ease-out;
+      }
+
+      @keyframes flash {
+        0% {
+          opacity: 0.4;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .panels {
+          grid-template-columns: 1fr;
+        }
+        .vs-divider {
+          flex-direction: row;
+          padding: 0.5rem 0;
+        }
+        .vs-divider::before,
+        .vs-divider::after {
+          width: 30px;
+          height: 1px;
+        }
+        .rate-tiles {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .rate-tile:nth-child(2) {
+          border-right: 1px solid var(--border);
+        }
+        .rate-tile:nth-child(3),
+        .rate-tile:nth-child(4) {
+          border-top: none;
+        }
+        .body {
+          padding: 1.2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="widget">
+      <div class="header">
+        <div class="header-dot"></div>
+        <div class="header-label">
+          Live tracker <span>AUD · Q2 2026</span>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="question">
+          The Federal Government has subsidised petrol by 26c per litre for three months, a cost of $1.5 billion with no ongoing solutions for daily transport
+        </div>
+
+        <div class="ticker-box">
+          <div class="panel-label">Fuel subsidy since Apr 1 2026</div>
+          <div class="panel-number flash" id="dollar-count">$108,155,904.90</div>
+        </div>
+
+         <div class="body">
+        <div class="answer">
+            What else $1.5 billion would buy
+        </div>
+
+        <div class="panels">
+          <div class="panel panel-lane">
+            <div class="panel-label">Km of pop-up bike paths</div>
+            <div class="panel-number" id="lane-count">600.87</div>
+            <div class="panel-unit">@ $180K per km</div>
+          </div>
+
+          <div class="vs-divider">OR</div>
+
+          <div class="panel panel-bike">
+            <div class="panel-label">Km of permanent shared paths</div>
+            <div class="panel-number" id="km-count">135.19</div>
+            <div class="panel-unit">@ $800K per km</div>
+          </div>
+
+          <div class="vs-divider">OR</div>
+
+          <div class="panel panel-bus">
+            <div class="panel-label">
+              Electric buses for regional towns
+            </div>
+            <div class="panel-number" id="bus-count">108</div>
+            <div class="panel-unit">@ $1M per bus</div>
+          </div>
+        </div>
+
+        <div class="rate-tiles">
+          <div class="rate-tile">
+            <div class="rate-tile-label">Per second</div>
+            <div class="rate-tile-value">$192.90</div>
+          </div>
+          <div class="rate-tile">
+            <div class="rate-tile-label">Per minute</div>
+            <div class="rate-tile-value">$11,574.07</div>
+          </div>
+          <div class="rate-tile">
+            <div class="rate-tile-label">Per hour</div>
+            <div class="rate-tile-value">$694,444.44</div>
+          </div>
+          <div class="rate-tile">
+            <div class="rate-tile-label">Per day</div>
+            <div class="rate-tile-value">$16,666,666.67</div>
+          </div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-label">
+            <span>3-month period progress</span>
+            <span id="pct-label">7.21%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width: 7.21%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Sources:
+          <a href="https://www.theguardian.com/australia-news/2026/mar/30/labor-to-halve-fuel-excise-on-petrol-and-diesel-for-three-months-after-national-cabinet-meeting" target="_blank" rel="noopener">The Guardian — Fuel excise cut</a>
+          ·
+          <a href="https://www.watoday.com.au/politics/western-australia/why-are-wa-s-diesel-buses-about-to-go-extinct-20250521-p5m13h.html" target="_blank" rel="noopener">WAToday — Electric buses</a>
+          ·
+          <a href="https://www.abc.net.au/news/2026-04-01/call-for-better-public-transport-wa-regions/106516160" target="_blank" rel="noopener">ABC News — Public transport WA regions</a></span>
+        <span id="elapsed-label">Elapsed: 6d 11h 44m 40s</span>
+      </div>
+    </div>
+
+    <script>
+      const TOTAL = 1_500_000_000;
+      const RATE_PER_SEC = TOTAL / (90 * 24 * 60 * 60);
+      const DURATION_MS = 90 * 24 * 60 * 60 * 1000;
+      const COST_PER_KM = 800_000;
+      const COST_PER_BUS = 1_000_000;
+      const COST_PER_LANE_KM = 180_000;
+      const START = new Date("2026-04-01T00:00:00+10:00").getTime();
+
+      const dollarEl = document.getElementById("dollar-count");
+      const kmEl = document.getElementById("km-count");
+      const busEl = document.getElementById("bus-count");
+      const laneEl = document.getElementById("lane-count");
+      const progressEl = document.getElementById("progress-fill");
+      const pctEl = document.getElementById("pct-label");
+      const elapsedEl = document.getElementById("elapsed-label");
+
+      function formatDollars(n) {
+        const [whole, dec] = n.toFixed(2).split(".");
+        return "$" + parseInt(whole).toLocaleString("en-AU") + "." + dec;
+      }
+
+      function formatKm(n) {
+        return n.toFixed(2);
+      }
+
+      function formatElapsed(ms) {
+        const s = Math.floor(ms / 1000);
+        const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        if (d > 0) return `${d}d ${h}h ${m}m ${sec}s`;
+        if (h > 0) return `${h}h ${m}m ${sec}s`;
+        if (m > 0) return `${m}m ${sec}s`;
+        return `${sec}s`;
+      }
+
+      let lastDollar = 0;
+
+      function tick() {
+        const now = Date.now();
+        const elapsed = Math.max(0, now - START);
+        const clamped = Math.min(elapsed, DURATION_MS);
+        const progress = clamped / DURATION_MS;
+
+        const spent = progress * TOTAL;
+        const km = spent / COST_PER_KM;
+        const buses = Math.floor(spent / COST_PER_BUS);
+        const laneKm = spent / COST_PER_LANE_KM;
+        const pct = (progress * 100).toFixed(2);
+
+        dollarEl.textContent = formatDollars(spent);
+        kmEl.textContent = formatKm(km);
+        busEl.textContent = buses.toLocaleString("en-AU");
+        laneEl.textContent = formatKm(laneKm);
+        progressEl.style.width = pct + "%";
+        pctEl.textContent = pct + "%";
+        elapsedEl.textContent = "Elapsed: " + formatElapsed(elapsed);
+
+        if (Math.floor(spent) !== Math.floor(lastDollar)) {
+          dollarEl.classList.remove("flash");
+          void dollarEl.offsetWidth;
+          dollarEl.classList.add("flash");
+        }
+        lastDollar = spent;
+      }
+
+      tick();
+      setInterval(tick, 250);
+    </script>
+  
+
+</body></html>
