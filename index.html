@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuel Subsidy Tracker</title>
-    
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fuel Subsidy Ticker</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
       *,
       *::before,
@@ -37,14 +41,14 @@
 
       .widget {
         width: 100%;
-        max-width: 1100px;
+        max-width: 820px;
         border: 1px solid var(--border);
         background: var(--mid);
         position: relative;
         overflow: hidden;
       }
 
-      .widget::before {
+       .widget::before {
         content: "";
         position: absolute;
         inset: 0;
@@ -59,7 +63,7 @@
         z-index: 10;
       }
 
-      /* Header */
+         /* Header */
       .header {
         background: var(--yellow);
         color: var(--black);
@@ -69,7 +73,7 @@
         gap: 0.6rem;
       }
 
-      .header-dot {
+        .header-dot {
         width: 10px;
         height: 10px;
         background: var(--black);
@@ -77,7 +81,7 @@
         animation: pulse 1s infinite;
       }
 
-      @keyframes pulse {
+       @keyframes pulse {
         0%,
         100% {
           opacity: 1;
@@ -135,12 +139,12 @@
         gap: 0.4rem;
       }
 
-      .ticker-box .panel-label {
-        font-size: rem;
+       .ticker-box .panel-label {
+        font-size: 0.7rem;
       }
 
-      .ticker-box .panel-number {
-        font-size: clamp(2.5rem, 7vw, 7rem);
+     .ticker-box .panel-number {
+        font-size: clamp(2.5rem, 7vw, 5.5rem);
         color: var(--red);
       }
 
@@ -157,14 +161,12 @@
         margin-bottom: 1.5rem;
       }
 
-      .panel {
+     .panel {
         padding: 1.5rem;
         border: 1px solid var(--border);
-        min-width: 0;
-        overflow: hidden;
       }
 
-      .panel-label {
+  .panel-label {
         font-family: "DM Mono", monospace;
         font-size: 0.65rem;
         letter-spacing: 0.18em;
@@ -449,7 +451,7 @@
 
           <div class="panel panel-bus">
             <div class="panel-label">
-              Electric buses
+              Electric buses for regional communities
             </div>
             <div class="panel-number">
               <number-flow id="bus-flow" data-will-change=""></number-flow>
